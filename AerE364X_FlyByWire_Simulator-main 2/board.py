@@ -35,8 +35,9 @@ D6=pin("FWD CMD")  # Featherboard FWD CMD
 SCL=pin("SCL")
 SDA=pin("SDA")
 
-D9=pin("LEFT OUT")
-D10=pin("RIGHT OUT")
+D9=pin("FRONT OUT")
+D10=pin("BACK OUT")
+D11=pin("ROT OUT")
 
 # These are for the Featherboard?
 #D7=pin("LEFT OUT") 

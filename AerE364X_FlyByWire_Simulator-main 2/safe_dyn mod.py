@@ -312,64 +312,42 @@ class dynamic_model(object):
                     # Extract the commanded PWM output pulse 
                     # width from the pin assigned to "FRONT OUT"
                     # in board.py and store this in the
-                    # variable front_pulse_width_sec
-                  
+                    # variable left_pulse_width_sec
                     if "FRONT OUT" in pwmio.PWMOuts_by_pin:
                         
-                        FRONT_PWM = pwmio.PWMOuts_by_pin["FRONT OUT"]
-                        front_pulse_width_sec = (1.0/FRONT_PWM.frequency)*(FRONT_PWM.duty_cycle/65536.0)
+                        LEFT_PWM = pwmio.PWMOuts_by_pin["FRONT OUT"]
+                        left_pulse_width_sec = (1.0/LEFT_PWM.frequency)*(LEFT_PWM.duty_cycle/65536.0)
                         
-                        front_gap_width_sec = (1.0/FRONT_PWM.frequency)*((65536.0-FRONT_PWM.duty_cycle)/65536.0)
-                        if front_pulse_width_sec < .99e-3 or front_pulse_width_sec > 2.01e-3:
-                            raise ValueError("Invalid FRONT OUT pulse width of %f ms" % (front_pulse_width_sec*1000.0))
+                        left_gap_width_sec = (1.0/LEFT_PWM.frequency)*((65536.0-LEFT_PWM.duty_cycle)/65536.0)
+                        if left_pulse_width_sec < .99e-3 or left_pulse_width_sec > 2.01e-3:
+                            raise ValueError("Invalid FRONT OUT pulse width of %f ms" % (left_pulse_width_sec*1000.0))
                         
-                        if front_gap_width_sec < 15e-3 or front_gap_width_sec > 120e-3:
-                            raise ValueError("Invalid FRONT OUT gap width of %f ms" % (front_gap_width_sec*1000.0))
+                        if left_gap_width_sec < 15e-3 or left_gap_width_sec > 120e-3:
+                            raise ValueError("Invalid FRONT OUT gap width of %f ms" % (left_gap_width_sec*1000.0))
                         pass
                     else:
-                        front_pulse_width_sec=1.5e-3
+                        left_pulse_width_sec=1.5e-3
                         pass
                     
                     # Extract the commanded PWM output pulse 
                     # width from the pin assigned to "BACK OUT"
                     # in board.py and store this in the
-                    # variable back_pulse_width_sec
-                    
+                    # variable right_pulse_width_sec
                     if "BACK OUT" in pwmio.PWMOuts_by_pin:
-                        BACK_PWM = pwmio.PWMOuts_by_pin["BACK OUT"]
-                        back_pulse_width_sec = (1.0/BACK_PWM.frequency)*(BACK_PWM.duty_cycle/65536.0)
+                        RIGHT_PWM = pwmio.PWMOuts_by_pin["BACK OUT"]
+                        right_pulse_width_sec = (1.0/RIGHT_PWM.frequency)*(RIGHT_PWM.duty_cycle/65536.0)
                         
-                        back_gap_width_sec = (1.0/BACK_PWM.frequency)*((65536.0-BACK_PWM.duty_cycle)/65536.0)
-                        if back_pulse_width_sec < .99e-3 or back_pulse_width_sec > 2.01e-3:
-                            raise ValueError("Invalid BACK OUT pulse width of %f ms" % (back_pulse_width_sec*1000.0))
+                        right_gap_width_sec = (1.0/RIGHT_PWM.frequency)*((65536.0-RIGHT_PWM.duty_cycle)/65536.0)
+                        if right_pulse_width_sec < .99e-3 or right_pulse_width_sec > 2.01e-3:
+                            raise ValueError("Invalid BACK OUT pulse width of %f ms" % (right_pulse_width_sec*1000.0))
                         
-                        if back_gap_width_sec < 15e-3 or back_gap_width_sec > 120e-3:
-                            raise ValueError("Invalid BACK OUT gap width of %f ms" % (back_gap_width_sec*1000.0))
+                        if right_gap_width_sec < 15e-3 or right_gap_width_sec > 120e-3:
+                            raise ValueError("Invalid BACK OUT gap width of %f ms" % (right_gap_width_sec*1000.0))
                         pass
                     else:
-                        back_pulse_width_sec = 1.5e-3
+                        right_pulse_width_sec = 1.5e-3
                         pass
-                    
-                    # Extract the commanded PWM output pulse 
-                    # width from the pin assigned to "ROT OUT"
-                    # in board.py and store this in the
-                    # variable rot_pulse_width_sec
-                    
-                    if "ROT OUT" in pwmio.PWMOuts_by_pin:
-                        ROT_PWM = pwmio.PWMOuts_by_pin["ROT OUT"]
-                        rot_pulse_width_sec = (1.0/ROT_PWM.frequency)*(ROT_PWM.duty_cycle/65536.0)
-                        
-                        rot_gap_width_sec = (1.0/ROT_PWM.frequency)*((65536.0-ROT_PWM.duty_cycle)/65536.0)
-                        if rot_pulse_width_sec < .99e-3 or rot_pulse_width_sec > 2.01e-3:
-                            raise ValueError("Invalid ROT OUT pulse width of %f ms" % (rot_pulse_width_sec*1000.0))
-                        
-                        if rot_gap_width_sec < 15e-3 or rot_gap_width_sec > 120e-3:
-                            raise ValueError("Invalid ROT OUT gap width of %f ms" % (rot_gap_width_sec*1000.0))
-                        pass
-                    else:
-                        rot_pulse_width_sec = 1.5e-3
-                        pass
-                    
+                    #print("right_pulse_width_ms = %f" % (right_pulse_width_sec*1e3))
 
 
                     # Add a moment about z due to wind if wind enabled
@@ -408,17 +386,13 @@ class dynamic_model(object):
                     # by the lever arm of the thruster from
                     # the center of mass 
 
-                   
-                    
-                    
-                    # Note I set this as if it was a right thruster, so when
-                    # on the back of the craft, viewing from top,  + throttle 
-                    # should face to the right
-                    rot_thruster_moment = (rot_pulse_width_sec*1e3-1.5)*self.thruster_force_per_ms*self.thruster_dist_from_cm
-                    
-                    # This needs to be better modeled probably
-                    front_back_thruster_moment = (back_pulse_width_sec - front_pulse_width_sec) * 1e2 
-                    
+                    left_thruster_moment = -(left_pulse_width_sec*1e3-1.5)*self.thruster_force_per_ms*self.thruster_dist_from_cm
+
+
+                    # Right thruster is the same except positive
+                    # settings makes us rotate CCW which
+                    # is a positive rotation around the Z axis. 
+                    right_thruster_moment = (right_pulse_width_sec*1e3-1.5)*self.thruster_force_per_ms*self.thruster_dist_from_cm
                     
                     
                     # fwd_differential_moment = 
@@ -437,9 +411,7 @@ class dynamic_model(object):
                     # Newton's law says sum of moments = change in
                     # angular momentum Hdot
                     
-                    Hdot_cm_craft_coords_z = rot_thruster_moment + front_back_thruster_moment + wind_damping_z + self.wind_moment
-
-                    
+                    Hdot_cm_craft_coords_z = left_thruster_moment + right_thruster_moment + wind_damping_z + self.wind_moment
 
                     # Create numpy array representing the change in
                     # angular momentum 
@@ -454,7 +426,7 @@ class dynamic_model(object):
                     # in world (X,Y,Z) cordinates instead of
                     # the object's frame. 
 
-                    #print("Hdot_cm_craft_coords",Hdot_cm_craft_coords,((back_pulse_width_sec*1e3-1.5)-(front_pulse_width_sec*1e3-1.5))*self.thruster_force_per_ms*self.thruster_dist_from_cm)
+                    #print("Hdot_cm_craft_coords",Hdot_cm_craft_coords,((right_pulse_width_sec*1e3-1.5)-(left_pulse_width_sec*1e3-1.5))*self.thruster_force_per_ms*self.thruster_dist_from_cm)
                     
                     Hdot_cm=vec_apply_rot(self.quat,Hdot_cm_craft_coords)
 

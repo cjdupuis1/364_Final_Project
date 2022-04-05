@@ -8,8 +8,8 @@ import pwmio
 import pulseio
 # Configuration of the simulator (will have to remove these lines
 # when running on real hardware) 
-import dyn_dup
-dyn_dup.enable_wind=False   # Set this to True to add a moment from the wind
+import dynamic_model
+dynamic_model.enable_wind=True   # Set this to True to add a moment from the wind
 
 # ***NOTE*** Do not get the various files which are part of the simulator
 # (adafruit_bno055.py, busio.py, board.py, etc.) confused with similarly
@@ -23,13 +23,13 @@ sensor = adafruit_bno055.BNO055_I2C(i2c)
 led = digitalio.DigitalInOut(board.D13)
 led.direction = digitalio.Direction.OUTPUT
 
-# forward = pulseio.PulseIn(board.D6, 1, False)
+forward = pulseio.PulseIn(board.D6, 1, False)
 
-forward = pulseio.PulseIn(board.D6) #use this when fwd command is inputed
+# forward = pulseio.PulseIn(board.D6) #use this when fwd command is inputed
+
 rotation = pulseio.PulseIn(board.D5)
-
-front_fan = pwmio.PWMOut(board.D9,1.5/period * duty_max ,frequency)
-back_fan = pwmio.PWMOut(board.D10, 1.5/period * duty_max, frequency)
+left_fan = pwmio.PWMOut(board.D9,1.5/period * duty_max ,frequency)
+right_fan = pwmio.PWMOut(board.D10, 1.5/period * duty_max, frequency)
 rot_fan = pwmio.PWMOut(board.D11, 1.5/period * duty_max, frequency)
 
 # Now create objects for the I2C bus, for the BNO055,
@@ -65,7 +65,7 @@ while True:
         pass
     rotation.pause()
     rot_pulse = rotation.popleft() / 1000
-    # print("ROT Pulse:", rot_pulse)
+    print("Pulse:", rot_pulse)
     rotation.clear()
     rotation.resume()
     # Wait until pulses have been received on pin D5
@@ -76,20 +76,6 @@ while True:
         led.value = True
     else:
         led.value = False
-    
-    #Use this to set what the forward command does
-    if len(forward) != 0:
-        forward.pause()
-        fwd_pulse = forward.popleft() / 1000
-        # print("FWD Pulse:", fwd_pulse)
-        forward.clear()
-        forward.resume()
-        
-        diff_pulse = fwd_pulse - 1.5
-        front_fan.duty_cyc = (1.5 - diff_pulse)/period * duty_max
-        back_fan.duty_cyc = (1.5 + diff_pulse)/period * duty_max
-        
-    
         
     # Check whether the BNO055 is calibrated
     # and turn on the LED on D13 as appopriate
@@ -100,10 +86,10 @@ while True:
     # Determine the commanded orientation based on from your pulse input from
     # pin D5
     head_d = (rot_pulse - 1) * 360 - 180
-    # print("Desired:" ,head_d)
+    print("Desired:" ,head_d)
     print("eulers:", eulers)
     error = ((head_d - eulers[0] + 360 + 180)%360 - 180)
-    # print("error:", error)
+    print("error:", error)
     k_p = 0.005
     p_term = k_p * error
     k_d = 0.075
@@ -117,8 +103,8 @@ while True:
         i_term = 0.1
     elif i_term < -0.1:
         i_term = -0.1
-    # print("dt:", dt)
-    # print("i_term:", i_term)
+    print("dt:", dt)
+    print("i_term:", i_term)
     # Select a coefficient for the proportional term
     # It will probably have units similar to output_command_ms/degree
     # Determine the proportional term by obtaining the error (subtracting
@@ -138,25 +124,23 @@ while True:
     elif output_ms < -0.5:
         output_ms = -0.5
         
-    # print("output ms:", output_ms)
+    print("output ms:", output_ms)
     # To start with use just the proportional term to determine the output rotation
     # command, which is an offset in ms from the nominal 1.5 ms that commands
     # the fully reversing motors to not move.
-    
-    rot_ms = 1.5 - output_ms
-    
-    # print("rot:", rot_ms)
-    
-    # if rot_ms == 1.5:
-    #     print("going straight")
-    # elif rot_ms > 1.5:
-    #     print("going left")
-    # else:
-    #     print("going right")
-        
-    rot_fan.duty_cyc = rot_ms/period * duty_max
-    
-    # print("rot duty:", rot_fan.duty_cyc)
+    right_ms = 1.5 - output_ms
+    left_ms = 1.5 + output_ms
+    print("Left:", left_ms)
+    print("right:", right_ms)
+    if right_ms == 1.5:
+        print("going straight")
+    elif right_ms > 1.5:
+        print("going left")
+    else:
+        print("going right")
+    left_fan.duty_cyc = left_ms/period * duty_max
+    right_fan.duty_cyc = right_ms/period * duty_max
+    print("left duty:", left_fan.duty_cyc, " right duty:", right_fan.duty_cyc)
     # Bound the output rotation command so that it cannot exceed 0.5 or be less than
     # -0.5
     # Apply the output rotation command in opposite senses to determine the duty

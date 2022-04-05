@@ -8,8 +8,8 @@ import pwmio
 import pulseio
 # Configuration of the simulator (will have to remove these lines
 # when running on real hardware) 
-import dyn_dup
-dyn_dup.enable_wind=False   # Set this to True to add a moment from the wind
+import dynamic_model
+dynamic_model.enable_wind=False   # Set this to True to add a moment from the wind
 
 # ***NOTE*** Do not get the various files which are part of the simulator
 # (adafruit_bno055.py, busio.py, board.py, etc.) confused with similarly
